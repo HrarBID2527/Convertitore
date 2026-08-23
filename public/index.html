@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convertitore MP4/MOV → MP3</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">SoundOut</span>
+    </div>
+
+    <div class="mode-toggle" role="tablist" aria-label="Modalità conversione">
+      <button class="mode-btn active" id="modeVideoBtn" role="tab" aria-selected="true">Video → MP3</button>
+      <button class="mode-btn" id="modeYtBtn" role="tab" aria-selected="false">YouTube</button>
+      <span class="mode-thumb" aria-hidden="true"></span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ================= SEZIONE MP4/MOV ================= -->
+    <section id="videoSection" class="panel">
+
+      <div class="panel-head">
+        <h1>Video in MP3, senza upload</h1>
+        <p>Il file resta sul tuo dispositivo: la conversione avviene nel browser. Nessun file caricato su server.</p>
+      </div>
+
+      <div class="card">
+
+        <!-- Dropzone -->
+        <div id="dropzone" class="dropzone">
+          <input type="file" id="fileInput" accept=".mp4,.mov,video/mp4,video/quicktime" hidden>
+          <div class="dz-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          </div>
+          <p class="dz-title">Trascina qui il tuo file <strong>MP4</strong> o <strong>MOV</strong></p>
+          <p class="dz-sub">oppure</p>
+          <button type="button" id="browseBtn" class="btn btn-primary">Scegli file</button>
+          <p class="dz-hint">Un file alla volta · max 500&nbsp;MB consigliato</p>
+        </div>
+
+        <!-- File selezionato -->
+        <div id="fileInfo" class="file-info hidden">
+          <div class="file-info-row">
+            <div class="file-icon">🎬</div>
+            <div class="file-meta">
+              <div id="fileName" class="file-name">—</div>
+              <div id="fileMeta" class="file-sub">—</div>
+            </div>
+            <button type="button" id="removeFileBtn" class="icon-btn" title="Rimuovi file" aria-label="Rimuovi file">✕</button>
+          </div>
+
+          <div class="options-row">
+            <label class="field">
+              <span>Qualità audio</span>
+              <select id="qualitySelect">
+                <option value="128">128 kbps — file più leggero</option>
+                <option value="192" selected>192 kbps — bilanciato</option>
+                <option value="320">320 kbps — massima qualità</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Canali</span>
+              <select id="channelsSelect">
+                <option value="2" selected>Stereo</option>
+                <option value="1">Mono (voce/lezioni)</option>
+              </select>
+            </label>
+          </div>
+
+          <button type="button" id="convertBtn" class="btn btn-primary btn-full">Converti in MP3</button>
+        </div>
+
+        <!-- Progress -->
+        <div id="progressBlock" class="progress-block hidden">
+          <div class="progress-label">
+            <span id="progressStatus">Preparazione…</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+          <p class="progress-hint">Non chiudere questa scheda finché la conversione non è completata.</p>
+        </div>
+
+        <!-- Done -->
+        <div id="doneBlock" class="done-block hidden">
+          <div class="done-icon">✓</div>
+          <p class="done-title">Conversione completata</p>
+          <p id="doneSub" class="done-sub">Il download è partito automaticamente.</p>
+          <div class="done-actions">
+            <button type="button" id="downloadAgainBtn" class="btn btn-secondary">Scarica di nuovo</button>
+            <button type="button" id="convertAnotherBtn" class="btn btn-primary">Converti un altro file</button>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div id="errorBlock" class="error-block hidden">
+          <p class="error-title">Qualcosa è andato storto</p>
+          <p id="errorMessage" class="error-sub">—</p>
+          <button type="button" id="errorRetryBtn" class="btn btn-secondary">Riprova</button>
+        </div>
+
+      </div>
+
+      <details class="privacy-note">
+        <summary>Privacy / come funziona</summary>
+        <ul>
+          <li><strong>Nessun upload:</strong> il video non lascia mai il tuo dispositivo, la conversione avviene localmente nel browser (FFmpeg via WebAssembly).</li>
+          <li><strong>Nessun log:</strong> non salviamo né analizziamo il contenuto dei tuoi file.</li>
+          <li>Su dispositivi meno potenti (soprattutto mobile) i file lunghi possono richiedere più tempo o memoria: per file molto lunghi ti consigliamo desktop.</li>
+        </ul>
+      </details>
+
+    </section>
+
+    <!-- ================= SEZIONE YOUTUBE ================= -->
+    <section id="ytSection" class="panel hidden">
+
+      <div class="panel-head">
+        <h1>YouTube → MP3</h1>
+        <p>Funzione separata dal convertitore video locale.</p>
+      </div>
+
+      <div class="card">
+
+        <div class="yt-form">
+          <div class="yt-icon">▶</div>
+          <label class="field field-full">
+            <span>Link video YouTube</span>
+            <input type="text" id="ytUrlInput" placeholder="https://www.youtube.com/watch?v=...">
+          </label>
+
+          <div class="options-row">
+            <label class="field">
+              <span>Qualità audio</span>
+              <select id="ytQualitySelect">
+                <option value="128">128 kbps — file più leggero</option>
+                <option value="192" selected>192 kbps — bilanciato</option>
+                <option value="320">320 kbps — massima qualità</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Canali</span>
+              <select id="ytChannelsSelect">
+                <option value="2" selected>Stereo</option>
+                <option value="1">Mono (voce/lezioni)</option>
+              </select>
+            </label>
+          </div>
+
+          <button type="button" id="ytConvertBtn" class="btn btn-primary btn-full">Converti in MP3</button>
+          <p class="yt-note">Usa solo con contenuti di cui hai i diritti o l'autorizzazione del titolare.</p>
+        </div>
+
+        <!-- Progress -->
+        <div id="ytProgressBlock" class="progress-block hidden">
+          <div class="progress-label">
+            <span id="ytProgressStatus">Preparazione…</span>
+            <span id="ytProgressPercent">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div id="ytProgressFill" class="progress-fill"></div>
+          </div>
+          <p class="progress-hint">Non chiudere questa scheda finché la conversione non è completata.</p>
+        </div>
+
+        <!-- Done -->
+        <div id="ytDoneBlock" class="done-block hidden">
+          <div class="done-icon">✓</div>
+          <p class="done-title">Conversione completata</p>
+          <p id="ytDoneSub" class="done-sub">Il download è partito automaticamente.</p>
+          <div class="done-actions">
+            <button type="button" id="ytDownloadAgainBtn" class="btn btn-secondary">Scarica di nuovo</button>
+            <button type="button" id="ytConvertAnotherBtn" class="btn btn-primary">Converti un altro link</button>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div id="ytErrorBlock" class="error-block hidden">
+          <p class="error-title">Qualcosa è andato storto</p>
+          <p id="ytErrorMessage" class="error-sub">—</p>
+          <button type="button" id="ytErrorRetryBtn" class="btn btn-secondary">Riprova</button>
+        </div>
+
+      </div>
+
+      <details class="privacy-note">
+        <summary>Privacy / come funziona</summary>
+        <ul>
+          <li>L'audio viene estratto da YouTube tramite un piccolo server locale, poi convertito in MP3 nel browser.</li>
+          <li>Usa questa funzione solo per contenuti tuoi o per cui hai ricevuto l'autorizzazione del titolare dei diritti.</li>
+          <li>Limite consigliato: video fino a 20 minuti.</li>
+        </ul>
+      </details>
+
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <span>Conversione locale nel browser · nessun file caricato su server</span>
+  </footer>
+
+</div>
+
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
+<script type="module" src="app.js?v=5"></script>
+</body>
+</html>
